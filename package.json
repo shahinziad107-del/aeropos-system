@@ -1,0 +1,24 @@
+{
+  "name": "aeropos-system",
+  "version": "1.0.0",
+  "description": "Premium Cashier POS System for Mobile Shop with Retail/Wholesale separation and mobile companion sync.",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "electron": "electron .",
+    "build": "electron-packager . AeroPOS --platform=win32 --arch=x64 --overwrite --out=dist"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "firebase-admin": "^12.1.0"
+  },
+  "devDependencies": {
+    "electron": "^30.0.9",
+    "electron-packager": "^17.1.2",
+    "nodemon": "^3.1.0"
+  },
+  "author": "Antigravity",
+  "license": "ISC"
+}

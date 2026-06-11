@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroPOS - POS Operating System</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for dashboard analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="desktop-os">
+
+  <!-- Desktop Screen Area -->
+  <div class="desktop-area" id="desktop-screen">
+    
+    <!-- Grid of Desktop Shortcuts -->
+    <div class="desktop-shortcuts">
+      <!-- Icon 1: Cashier POS -->
+      <div class="shortcut-icon" double-click onclick="openWindow('window-pos')">
+        <div class="icon-wrapper pos">
+          <i class="fa-solid fa-cash-register"></i>
+        </div>
+        <div class="icon-label">AeroPOS Register</div>
+      </div>
+
+      <!-- Icon 2: Sales Analytics -->
+      <div class="shortcut-icon" onclick="openWindow('window-dashboard')">
+        <div class="icon-wrapper stats">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="icon-label">Sales Dashboard</div>
+      </div>
+
+      <!-- Icon 3: Sales Logs -->
+      <div class="shortcut-icon" onclick="openWindow('window-sales')">
+        <div class="icon-wrapper logs">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <div class="icon-label">Sales History Log</div>
+      </div>
+
+      <!-- Icon 4: Mobile Sync QR -->
+      <div class="shortcut-icon" onclick="openWindow('window-sync')">
+        <div class="icon-wrapper sync">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+        <div class="icon-label">Mobile Sync Config</div>
+      </div>
+
+      <!-- Icon 5: Wi-Fi Settings -->
+      <div class="shortcut-icon" onclick="openWindow('window-wifi')">
+        <div class="icon-wrapper wifi-shortcut" style="background: linear-gradient(135deg, #10b981, #0ea5e9);">
+          <i class="fa-solid fa-wifi"></i>
+        </div>
+        <div class="icon-label">Wi-Fi Settings</div>
+      </div>
+    </div>
+
+    <!-- WINDOW 1: POS Cashier Register -->
+    <div class="window active" id="window-pos" style="width: 1000px; height: 600px; left: 60px; top: 30px;" onclick="focusWindow('window-pos')">
+      <div class="window-titlebar" onmousedown="startWindowDrag(event, 'window-pos')" ontouchstart="startWindowDrag(event, 'window-pos')">
+        <div class="window-title">
+          <i class="fa-solid fa-cash-register" style="color: var(--accent-active); margin-right: 8px;"></i>
+          AeroPOS Cashier Register [Retail Mode]
+        </div>
+        <div class="window-controls">
+          <button class="win-btn min" onclick="minimizeWindow('window-pos')"><i class="fa-solid fa-minus"></i></button>
+          <button class="win-btn max" onclick="maximizeWindow('window-pos')"><i class="fa-solid fa-expand"></i></button>
+          <button class="win-btn close" onclick="closeWindow('window-pos')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-body">
+        <div class="window-pos-layout">
+          <!-- Main Catalog / Cart Area -->
+          <div class="app-pos-cols">
+            <!-- Left panel: Catalog grid -->
+            <div class="left-panel">
+              <div class="mode-banner">
+                <div class="mode-info">
+                  <h3>Pricing Catalog</h3>
+                  <p id="mode-subtitle">Select pricing mode for retail or wholesale</p>
+                </div>
+                <!-- Toggle switches -->
+                <div class="mode-switch-container">
+                  <button class="mode-btn active-retail" id="mode-retail-btn" onclick="setPricingMode('Retail')">
+                    <i class="fa-solid fa-user" style="font-size: 0.8rem;"></i>Retail (تجزئة)
+                  </button>
+                  <button class="mode-btn" id="mode-wholesale-btn" onclick="setPricingMode('Wholesale')">
+                    <i class="fa-solid fa-boxes-stacked" style="font-size: 0.8rem;"></i>Wholesale (جملة)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Catalog Pane -->
+              <div class="catalog-container">
+                <div class="catalog-header">
+                  <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="catalog-search" placeholder="Search product or type barcode..." oninput="filterCatalog()">
+                  </div>
+                </div>
+
+                <div class="category-filter" id="category-filter-chips">
+                  <div class="cat-chip active" onclick="filterCategory('all')">All Products</div>
+                  <div class="cat-chip" onclick="filterCategory('Screens')">Screens (شاشات)</div>
+                  <div class="cat-chip" onclick="filterCategory('Protectors')">Protectors (سكرينات)</div>
+                  <div class="cat-chip" onclick="filterCategory('Cases')">Cases (جرابات)</div>
+                  <div class="cat-chip" onclick="filterCategory('Cables')">Cables & Chargers</div>
+                </div>
+
+                <div class="product-grid" id="product-grid">
+                  <!-- Loaded dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right panel: Cart Drawer -->
+            <div class="right-panel">
+              <div class="cart-header">
+                <div class="cart-title">
+                  <i class="fa-solid fa-cart-shopping"></i>Active Cart
+                  <span class="cart-badge" id="cart-count">0</span>
+                </div>
+                <button class="clear-cart-btn" onclick="clearCart()">
+                  <i class="fa-solid fa-trash-can" style="margin-right: 4px;"></i>Clear All
+                </button>
+              </div>
+
+              <div class="cart-items-list" id="cart-items">
+                <div class="cart-empty">
+                  <i class="fa-solid fa-basket-shopping"></i>
+                  <p>Register is empty. Scan barcodes or select products to begin.</p>
+                </div>
+              </div>
+
+              <!-- Summary checkout -->
+              <div class="cart-summary">
+                <div class="summary-row">
+                  <span>Subtotal</span>
+                  <span id="summary-subtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                  <span>Tax (10% VAT)</span>
+                  <span id="summary-tax">$0.00</span>
+                </div>
+                <div class="summary-row total">
+                  <span>Grand Total</span>
+                  <span id="summary-total">$0.00</span>
+                </div>
+
+                <div style="margin-top: 0.5rem;">
+                  <div class="payment-methods">
+                    <button class="pay-btn selected" id="pay-cash" onclick="setPaymentMethod('Cash')">
+                      <i class="fa-solid fa-money-bill-wave"></i>Cash
+                    </button>
+                    <button class="pay-btn" id="pay-card" onclick="setPaymentMethod('Card')">
+                      <i class="fa-solid fa-credit-card"></i>Card
+                    </button>
+                    <button class="pay-btn" id="pay-mobile" onclick="setPaymentMethod('Mobile Pay')">
+                      <i class="fa-solid fa-qrcode"></i>Mobile Pay
+                    </button>
+                  </div>
+                </div>
+
+                <button class="checkout-btn" id="checkout-button" onclick="checkout()">
+                  <i class="fa-solid fa-cash-register"></i>Process Sale (شراء)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOW 2: Sales Analytics Dashboard -->
+    <div class="window" id="window-dashboard" style="width: 800px; height: 500px; left: 160px; top: 80px;" onclick="focusWindow('window-dashboard')">
+      <div class="window-titlebar" onmousedown="startWindowDrag(event, 'window-dashboard')" ontouchstart="startWindowDrag(event, 'window-dashboard')">
+        <div class="window-title">
+          <i class="fa-solid fa-chart-line" style="color: var(--accent-active); margin-right: 8px;"></i>
+          Sales Performance Dashboard
+        </div>
+        <div class="window-controls">
+          <button class="win-btn min" onclick="minimizeWindow('window-dashboard')"><i class="fa-solid fa-minus"></i></button>
+          <button class="win-btn max" onclick="maximizeWindow('window-dashboard')"><i class="fa-solid fa-expand"></i></button>
+          <button class="win-btn close" onclick="closeWindow('window-dashboard')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-body">
+        <div class="dashboard-container">
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <div class="stat-title">Total Revenue</div>
+              <div class="stat-value" id="stats-total-revenue">$0.00</div>
+              <div class="stat-sub" id="stats-total-count">0 Transactions</div>
+            </div>
+            <div class="stat-card retail">
+              <div class="stat-title">Retail Revenue</div>
+              <div class="stat-value" id="stats-retail-revenue">$0.00</div>
+              <div class="stat-sub" id="stats-retail-count">0 Sales</div>
+            </div>
+            <div class="stat-card wholesale">
+              <div class="stat-title">Wholesale Revenue</div>
+              <div class="stat-value" id="stats-wholesale-revenue">$0.00</div>
+              <div class="stat-sub" id="stats-wholesale-count">0 Sales</div>
+            </div>
+            <div class="stat-card" style="border-left: 4px solid var(--success);">
+              <div class="stat-title">Average Ticket</div>
+              <div class="stat-value" id="stats-avg-ticket">$0.00</div>
+              <div class="stat-sub">Retail/Wholesale</div>
+            </div>
+          </div>
+
+          <div class="chart-area">
+            <div class="chart-box">
+              <div class="chart-title-box">Sales Revenue Breakdown</div>
+              <div class="chart-wrapper">
+                <canvas id="salesChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-box">
+              <div class="chart-title-box">Sales Count Method Split</div>
+              <div class="chart-wrapper" style="display: flex; justify-content: center; align-items: center;">
+                <canvas id="methodChart" style="max-height: 150px;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOW 3: Sales Logs History -->
+    <div class="window" id="window-sales" style="width: 820px; height: 480px; left: 240px; top: 120px;" onclick="focusWindow('window-sales')">
+      <div class="window-titlebar" onmousedown="startWindowDrag(event, 'window-sales')" ontouchstart="startWindowDrag(event, 'window-sales')">
+        <div class="window-title">
+          <i class="fa-solid fa-receipt" style="color: var(--accent-active); margin-right: 8px;"></i>
+          System Transaction Logs
+        </div>
+        <div class="window-controls">
+          <button class="win-btn min" onclick="minimizeWindow('window-sales')"><i class="fa-solid fa-minus"></i></button>
+          <button class="win-btn max" onclick="maximizeWindow('window-sales')"><i class="fa-solid fa-expand"></i></button>
+          <button class="win-btn close" onclick="closeWindow('window-sales')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-body">
+        <div class="sales-log-container">
+          <div class="sales-log-header">
+            <div class="sales-log-title">Sales Transaction Log</div>
+            <div class="log-filters">
+              <button class="log-filter-btn active" onclick="filterSalesLog('all', this)">All</button>
+              <button class="log-filter-btn" onclick="filterSalesLog('Retail', this)">Retail Logs</button>
+              <button class="log-filter-btn" onclick="filterSalesLog('Wholesale', this)">Wholesale Logs</button>
+            </div>
+          </div>
+
+          <div class="sales-table-wrapper">
+            <table class="sales-table">
+              <thead>
+                <tr>
+                  <th>Txn ID</th>
+                  <th>Date & Time</th>
+                  <th>Mode</th>
+                  <th>Items Count</th>
+                  <th>Payment</th>
+                  <th>Total Value</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="sales-log-body">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOW 5: Wi-Fi Settings & Network Manager -->
+    <div class="window" id="window-wifi" style="width: 650px; height: 450px; left: 200px; top: 120px; display: none;" onclick="focusWindow('window-wifi')">
+      <div class="window-titlebar" onmousedown="startWindowDrag(event, 'window-wifi')" ontouchstart="startWindowDrag(event, 'window-wifi')">
+        <div class="window-title">
+          <i class="fa-solid fa-wifi" style="color: var(--accent-active); margin-right: 8px;"></i>
+          Wi-Fi Network Connections / اتصالات شبكة الواي فاي
+        </div>
+        <div class="window-controls">
+          <button class="win-btn min" onclick="minimizeWindow('window-wifi')"><i class="fa-solid fa-minus"></i></button>
+          <button class="win-btn max" onclick="maximizeWindow('window-wifi')"><i class="fa-solid fa-expand"></i></button>
+          <button class="win-btn close" onclick="closeWindow('window-wifi')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-body" style="background: var(--bg-secondary); display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+        
+        <!-- Connection Status Banner -->
+        <div class="wifi-status-banner" id="wifi-status-banner">
+          <div class="status-left">
+            <div class="status-icon-glow" id="status-icon-glow">
+              <i class="fa-solid fa-wifi"></i>
+            </div>
+            <div class="status-details">
+              <span class="status-lbl">Connection State</span>
+              <h3 class="status-ssid" id="wifi-connected-ssid">Disconnected</h3>
+              <p class="status-ip" id="wifi-connected-ip">No IP Address</p>
+            </div>
+          </div>
+          <div class="status-right">
+            <button class="wifi-action-btn disconnect" id="wifi-disconnect-btn" onclick="requestWifiDisconnect()" style="display: none;">
+              <i class="fa-solid fa-circle-xmark"></i> Disconnect
+            </button>
+            <button class="wifi-action-btn scan" id="wifi-scan-btn" onclick="requestWifiScan()">
+              <i class="fa-solid fa-arrows-rotate" id="wifi-scan-icon"></i> Scan Networks
+            </button>
+          </div>
+        </div>
+        
+        <!-- Main Wifi Section (Grid list / connect form) -->
+        <div class="wifi-manager-content">
+          <!-- Discovered Networks Pane -->
+          <div class="wifi-list-pane">
+            <div class="pane-title">Discovered Networks / الشبكات المتاحة</div>
+            <div class="wifi-networks-list" id="wifi-networks-list">
+              <div class="wifi-list-loading">
+                <i class="fa-solid fa-spinner fa-spin-pulse"></i>
+                <p>Scanning for nearby networks...</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Connect Form Pane -->
+          <div class="wifi-connect-pane" id="wifi-connect-pane" style="display: none;">
+            <div class="pane-title">Authenticate Network / رمز الحماية</div>
+            <div class="wifi-form-card">
+              <div class="form-header">
+                <i class="fa-solid fa-lock" style="color: var(--accent-active); font-size: 1.2rem;"></i>
+                <div>
+                  <h4 id="wifi-target-ssid">WiFi SSID</h4>
+                  <span class="security-badge" id="wifi-target-security">Secured (WPA2)</span>
+                </div>
+              </div>
+              
+              <div class="form-body">
+                <div class="input-group">
+                  <label for="wifi-password-input">Network Security Key</label>
+                  <div class="password-input-wrapper">
+                    <input type="password" id="wifi-password-input" placeholder="Enter security key...">
+                    <button class="toggle-pwd-btn" onclick="toggleWifiPasswordVisibility()">
+                      <i class="fa-solid fa-eye" id="toggle-pwd-icon"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="wifi-error-message" class="wifi-error-alert" style="display: none;">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                  <span id="wifi-error-text">Failed to connect. Please check your password.</span>
+                </div>
+                
+                <div class="form-actions">
+                  <button class="form-btn cancel" onclick="hideWifiConnectPane()">Cancel</button>
+                  <button class="form-btn submit" id="wifi-connect-submit-btn" onclick="submitWifiConnection()">
+                    <span id="wifi-connect-btn-text">Connect</span>
+                    <i class="fa-solid fa-spinner fa-spin" id="wifi-connect-btn-spinner" style="display: none;"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- WINDOW 4: Mobile Sync & Firebase Config -->
+    <div class="window" id="window-sync" style="width: 620px; height: 460px; left: 280px; top: 100px;" onclick="focusWindow('window-sync')">
+      <div class="window-titlebar" onmousedown="startWindowDrag(event, 'window-sync')" ontouchstart="startWindowDrag(event, 'window-sync')">
+        <div class="window-title">
+          <i class="fa-solid fa-mobile-screen-button" style="color: var(--accent-active); margin-right: 8px;"></i>
+          System Connection & Firebase Setup / إعدادات الاتصال وقاعدة البيانات
+        </div>
+        <div class="window-controls">
+          <button class="win-btn min" onclick="minimizeWindow('window-sync')"><i class="fa-solid fa-minus"></i></button>
+          <button class="win-btn max" onclick="maximizeWindow('window-sync')"><i class="fa-solid fa-expand"></i></button>
+          <button class="win-btn close" onclick="closeWindow('window-sync')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      
+      <div class="window-body" style="background: var(--bg-secondary); padding: 1.2rem; display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.2rem; min-height: 0;">
+        
+        <!-- Left Side: Mobile Network Sync -->
+        <div style="border-right: 1px solid var(--card-border); padding-right: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; justify-content: space-between;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--card-border); padding-bottom: 0.4rem;">
+            Mobile Connection / اتصال الهاتف
+          </h4>
+          
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+            <div class="qr-code-placeholder" id="qr-container" style="background: #fff; padding: 8px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center;">
+              <div style="font-size: 0.75rem; color: #111;">Loading Connection QR...</div>
+            </div>
+            <div class="network-instructions" style="font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
+              Scan QR or open connection link:
+              <div class="network-ip-val" id="network-ip-text" style="font-family: monospace; font-weight: 700; color: var(--accent-active); margin-top: 0.2rem; word-break: break-all;">http://127.0.0.1:3000/mobile</div>
+            </div>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Select PC Network IP</label>
+            <select id="ip-select" onchange="onIpSelectChanged(this)" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 6px; border-radius: 6px; font-family: var(--font-main); font-size: 0.8rem; outline: none; width: 100%;">
+              <option value="127.0.0.1">localhost (127.0.0.1)</option>
+            </select>
+            
+            <div style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.2rem;">
+              <input type="text" id="manual-ip-input" placeholder="Type IP manually..." style="flex: 1; background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 6px; border-radius: 6px; font-family: var(--font-main); font-size: 0.8rem; outline: none;">
+              <button onclick="applyManualIp()" style="background: var(--accent-active); border: none; color: #0b0f19; font-weight: 700; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Side: Firebase Configuration -->
+        <div style="display: flex; flex-direction: column; gap: 0.8rem; justify-content: space-between;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--card-border); padding-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>Firebase Firestore / قاعدة البيانات</span>
+            <span id="firebase-status-badge" class="invoice-mode-badge retail" style="font-size: 0.65rem; padding: 2px 6px;">Local Memory</span>
+          </h4>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.4rem; flex: 1;">
+            <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">
+              Service Account Credentials JSON
+            </label>
+            <textarea id="firebase-json-input" placeholder="Paste your service account credentials JSON here..." 
+                      style="flex: 1; width: 100%; background: var(--bg-primary); border: 1px solid var(--card-border); color: #00ff66; font-family: monospace; font-size: 0.75rem; padding: 8px; border-radius: 8px; outline: none; resize: none;"></textarea>
+          </div>
+          
+          <button onclick="saveFirebaseConfig()" style="background: linear-gradient(135deg, var(--accent-active), #a855f7); border: none; color: #fff; font-weight: 700; padding: 10px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Save & Connect Database
+          </button>
+        </div>
+        
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Taskbar (OS Bottom Bar) -->
+  <div class="taskbar">
+    <!-- Start Button Menu -->
+    <button class="start-menu-btn" onclick="toggleStartMenu(event)">
+      <i class="fa-solid fa-bolt"></i>Start
+    </button>
+
+    <!-- Taskbar Pinned Active Apps area -->
+    <div class="taskbar-apps" id="taskbar-apps">
+      <!-- Managed dynamically by app.js -->
+    </div>
+
+    <!-- Right Side System Tray -->
+    <div class="system-tray">
+      <!-- Wi-Fi status indicator -->
+      <div class="tray-icon" title="Wi-Fi Connection Status" onclick="openWindow('window-wifi')">
+        <span class="status-dot pulse" id="tray-wifi-dot" style="margin-right: 4px;"></span>
+        <i class="fa-solid fa-wifi" id="tray-wifi-icon" style="color: var(--accent-active);"></i>
+      </div>
+      <!-- Latency check -->
+      <div class="tray-text" id="ping-text">Ping: 2ms</div>
+      <!-- Device count -->
+      <div class="tray-text" id="connected-devices"><i class="fa-solid fa-mobile-screen"></i> 1</div>
+      <!-- Digital Clock -->
+      <div class="tray-text clock" id="tray-clock">12:00 PM</div>
+    </div>
+  </div>
+
+  <!-- Start Menu Drawer -->
+  <div class="start-menu" id="start-menu">
+    <div class="start-menu-header">
+      <div class="start-user">
+        <i class="fa-solid fa-circle-user" style="font-size: 1.8rem; color: var(--accent-active);"></i>
+        <span>AeroPOS Admin</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="shutdown-btn" onclick="shutdownSystem()" title="Restart Cashier System (Refresh)" style="background: rgba(255,255,255,0.05); color: #fff;">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+        <button class="shutdown-btn" onclick="exitSystem()" title="Exit Kiosk System (Admin Password)" style="background: var(--error); color: #fff;">
+          <i class="fa-solid fa-power-off"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="start-menu-apps">
+      <div class="start-app-item" onclick="openWindow('window-pos')">
+        <i class="fa-solid fa-cash-register" style="color: var(--accent-retail); font-size: 1.2rem;"></i>
+        <span>POS Register</span>
+      </div>
+      <div class="start-app-item" onclick="openWindow('window-dashboard')">
+        <i class="fa-solid fa-chart-line" style="color: var(--accent-wholesale); font-size: 1.2rem;"></i>
+        <span>Sales Dashboard</span>
+      </div>
+      <div class="start-app-item" onclick="openWindow('window-sales')">
+        <i class="fa-solid fa-receipt" style="color: #a855f7; font-size: 1.2rem;"></i>
+        <span>Transaction History</span>
+      </div>
+      <div class="start-app-item" onclick="openWindow('window-sync')">
+        <i class="fa-solid fa-mobile-screen-button" style="color: var(--success); font-size: 1.2rem;"></i>
+        <span>Mobile Link Sync</span>
+      </div>
+      <div class="start-app-item" onclick="openWindow('window-wifi')">
+        <i class="fa-solid fa-wifi" style="color: var(--accent-active); font-size: 1.2rem;"></i>
+        <span>Wi-Fi Connections</span>
+      </div>
+    </div>
+    
+    <div class="start-menu-footer">
+      <span>POS OS - Version 1.0.0</span>
+    </div>
+  </div>
+
+  <!-- Barcode Simulation Box (Floating Emulator) -->
+  <div class="barcode-emulator-footer">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <i class="fa-solid fa-barcode" style="color: var(--accent-active); font-size: 1.1rem;"></i>
+      <span>Test Barcodes: <strong>1901901001</strong> (Privacy Glass) or <strong>4604604001</strong> (Charger)</span>
+    </div>
+    <div class="barcode-emulator-input">
+      <input type="text" id="emulator-barcode-input" placeholder="Scan barcode..." onkeypress="handleEmulatorBarcodeKeyPress(event)">
+      <button onclick="simulateScan()">Scan</button>
+    </div>
+  </div>
+
+  <!-- Modal receipt overlay -->
+  <div class="modal-overlay" id="receipt-modal-overlay">
+    <div class="receipt-modal" id="receipt-content">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

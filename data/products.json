@@ -1,0 +1,142 @@
+[
+  {
+    "category": "Cases",
+    "wholesalePrice": 9,
+    "retailPrice": 25,
+    "id": "c1",
+    "name": "MagSafe Clear Case (iPhone 15 Pro)",
+    "image": "",
+    "stock": 90,
+    "barcode": "3703703001"
+  },
+  {
+    "retailPrice": 30,
+    "id": "c2",
+    "name": "Spigen Tough Armor (Samsung S24)",
+    "wholesalePrice": 14,
+    "category": "Cases",
+    "barcode": "3703703002",
+    "stock": 41,
+    "image": ""
+  },
+  {
+    "category": "Cases",
+    "wholesalePrice": 3,
+    "name": "Silicone Soft Case (Universal)",
+    "id": "c3",
+    "retailPrice": 12,
+    "image": "",
+    "stock": 299,
+    "barcode": "3703703003"
+  },
+  {
+    "image": "",
+    "stock": 110,
+    "barcode": "4604604001",
+    "category": "Cables",
+    "wholesalePrice": 6.5,
+    "retailPrice": 18,
+    "id": "ch1",
+    "name": "PD 20W USB-C Fast Charger Block"
+  },
+  {
+    "barcode": "4604604002",
+    "stock": 65,
+    "image": "",
+    "id": "ch2",
+    "name": "PD 45W Dual Port Charger Block",
+    "retailPrice": 35,
+    "category": "Cables",
+    "wholesalePrice": 16
+  },
+  {
+    "barcode": "4604604003",
+    "stock": 180,
+    "image": "",
+    "id": "ch3",
+    "name": "Braided USB-C to Lightning Cable 2m",
+    "retailPrice": 15,
+    "category": "Cables",
+    "wholesalePrice": 4.2
+  },
+  {
+    "barcode": "4604604004",
+    "stock": 220,
+    "image": "",
+    "retailPrice": 14,
+    "id": "ch4",
+    "name": "Super Fast USB-C to USB-C Cable 100W",
+    "category": "Cables",
+    "wholesalePrice": 3.8
+  },
+  {
+    "id": "p1",
+    "name": "Privacy Glass Protector (iPhone 15)",
+    "retailPrice": 12,
+    "category": "Protectors",
+    "wholesalePrice": 4.5,
+    "barcode": "1901901001",
+    "stock": 150,
+    "image": ""
+  },
+  {
+    "category": "Protectors",
+    "wholesalePrice": 3.5,
+    "retailPrice": 10,
+    "id": "p2",
+    "name": "Ceramic Matte Protector (Samsung S24)",
+    "stock": 200,
+    "image": "",
+    "barcode": "1901901002"
+  },
+  {
+    "category": "Protectors",
+    "wholesalePrice": 8,
+    "retailPrice": 20,
+    "id": "p3",
+    "name": "UV Tempered Glass (OnePlus 12)",
+    "stock": 80,
+    "image": "",
+    "barcode": "1901901003"
+  },
+  {
+    "barcode": "1901901004",
+    "image": "",
+    "stock": 120,
+    "retailPrice": 11,
+    "id": "p4",
+    "name": "Privacy Glass Protector (iPhone 14)",
+    "category": "Protectors",
+    "wholesalePrice": 4
+  },
+  {
+    "retailPrice": 180,
+    "id": "s1",
+    "name": "OLED Display Assembly (iPhone 13 Pro)",
+    "category": "Screens",
+    "wholesalePrice": 110,
+    "barcode": "2802802001",
+    "stock": 15,
+    "image": ""
+  },
+  {
+    "stock": 8,
+    "image": "",
+    "barcode": "2802802002",
+    "category": "Screens",
+    "wholesalePrice": 175,
+    "retailPrice": 250,
+    "name": "AMOLED Screen Panel (Samsung S23 Ultra)",
+    "id": "s2"
+  },
+  {
+    "stock": 25,
+    "image": "",
+    "barcode": "2802802003",
+    "category": "Screens",
+    "wholesalePrice": 38,
+    "id": "s3",
+    "name": "IPS LCD Screen Panel (Redmi Note 12)",
+    "retailPrice": 65
+  }
+]

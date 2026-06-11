@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Disable screen saver and power management
+xset s off
+xset s noblank
+xset -dpms
+
+# Start openbox window manager in background
+openbox-session &
+
+# Wait for Node.js POS server to start on port 3000
+while ! nc -z localhost 3000; do
+  sleep 0.2
+done
+
+# Launch Chromium browser in Kiosk mode
+chromium-browser \
+  --kiosk \
+  --no-first-run \
+  --no-sandbox \
+  --disable-infobars \
+  --disable-session-crashed-bubble \
+  --disable-features=Translate \
+  --window-position=0,0 \
+  --app=http://localhost:3000

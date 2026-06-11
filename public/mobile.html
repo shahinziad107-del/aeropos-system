@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroPOS - Mobile Companion</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PWA Manifest & Meta -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#080b11">
+  <!-- html5-qrcode Library for Camera Scanner -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- Firebase client SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+  <!-- Login Screen Panel -->
+  <div class="login-overlay" id="mobile-login-panel" style="display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; background: var(--bg-primary); backdrop-filter: blur(10px);">
+    <div class="receipt-modal" style="width: 85%; max-width: 360px; padding: 2rem; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--card-border); box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 1.2rem; text-align: center;">
+      <div class="brand" style="justify-content: center; font-size: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <div class="brand-icon" style="width: 40px; height: 40px; font-size: 1.3rem; border-radius: 10px; background: var(--accent-active); color: #0b0f19; display: flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="brand-name" style="font-size: 1.5rem;">Aero<span>POS</span></div>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Admin Portal Access / تسجيل دخول المشرف</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left;">
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Email Address</label>
+          <input type="email" id="login-email" placeholder="admin@aeropos.com" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; border-color: var(--card-border);">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+          <label style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; border-color: var(--card-border);">
+        </div>
+      </div>
+      
+      <button onclick="handleAdminLogin()" style="background: var(--accent-active); border: none; color: #0b0f19; font-weight: 700; padding: 12px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;">
+        Sign In / تسجيل الدخول
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-view">
+    
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+      <div class="brand">
+        <div class="brand-icon" style="width: 32px; height: 32px; font-size: 1.1rem; border-radius: 8px;">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="brand-name" style="font-size: 1.1rem;">Aero<span>POS</span></div>
+      </div>
+      <div class="stat-pill" id="btn-mobile-settings" onclick="openConnectionModal()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+        <span class="status-dot pulse" id="mobile-connection-dot"></span>
+        <span id="mobile-connection-status">Synced</span>
+      </div>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="mobile-tabs">
+      <button class="mobile-tab-btn active" id="btn-cust-tab" onclick="switchMobileTab('customer')">
+        <i class="fa-solid fa-desktop"></i>
+        <span>Display</span>
+      </button>
+      <button class="mobile-tab-btn" id="btn-scan-tab" onclick="switchMobileTab('scanner')">
+        <i class="fa-solid fa-barcode"></i>
+        <span>Scanner</span>
+      </button>
+      <button class="mobile-tab-btn" id="btn-invoice-tab" onclick="switchMobileTab('invoices')">
+        <i class="fa-solid fa-receipt"></i>
+        <span>Invoices</span>
+      </button>
+      <button class="mobile-tab-btn" id="btn-add-tab" onclick="switchMobileTab('addproduct')">
+        <i class="fa-solid fa-circle-plus"></i>
+        <span>Add Item</span>
+      </button>
+    </div>
+
+    <!-- PANEL 1: Customer Display Mode -->
+    <div class="mobile-panel active" id="panel-customer">
+      <div class="cust-cart-card">
+        <div class="cust-cart-header">
+          <div style="font-size: 0.95rem; font-weight: 700;">Active Register Cart</div>
+          <span class="cust-mode-badge retail" id="cust-cart-mode">Retail Mode</span>
+        </div>
+
+        <!-- Dynamic Cart Items List -->
+        <div class="cust-cart-items" id="cust-cart-items">
+          <div style="text-align: center; color: var(--text-muted); margin-top: 4rem;">
+            <i class="fa-solid fa-basket-shopping" style="font-size: 2.5rem; opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
+            Waiting for Cashier to scan items...
+          </div>
+        </div>
+
+        <!-- Totals Row -->
+        <div class="cust-total-row">
+          <span>Total Price</span>
+          <span id="cust-cart-total">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: Barcode Scanner Mode -->
+    <div class="mobile-panel" id="panel-scanner">
+      <div class="scanner-card">
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem; display: flex; justify-content: space-between; align-items: center;">
+          <span>Camera Barcode Reader</span>
+          <button id="btn-toggle-scanner" onclick="toggleCameraScanner()" class="camera-control-btn">
+            <i class="fa-solid fa-video"></i> Start Camera
+          </button>
+        </h4>
+        
+        <!-- Camera Viewport Screen -->
+        <div class="scan-camera-container">
+          <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; display: none;"></div>
+          
+          <div id="scanner-placeholder" class="scan-camera-sim">
+            <div class="scan-line"></div>
+            <i class="fa-solid fa-camera" style="font-size: 2.5rem; opacity: 0.25; color: var(--text-primary);"></i>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">Camera is inactive</p>
+            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem;">Click "Start Camera" above to scan</p>
+          </div>
+        </div>
+
+        <!-- Scanner status feedback -->
+        <div class="scanner-feedback" id="scan-feedback">
+          Align barcode in camera viewport to scan.
+        </div>
+
+        <!-- Manual barcode input form -->
+        <div style="display: flex; gap: 0.5rem; background: var(--bg-tertiary); padding: 0.5rem; border-radius: 8px; border: 1px solid var(--card-border);">
+          <input type="text" id="manual-scan-input" placeholder="Type barcode manually..." 
+                 style="flex: 1; background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-family: var(--font-main); font-size: 0.85rem; outline: none;">
+          <button onclick="submitManualScan()" 
+                  style="background: var(--accent-active); border: none; color: #0b0f19; font-weight: 700; font-family: var(--font-main); padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; cursor: pointer;">
+            Scan
+          </button>
+        </div>
+
+        <!-- Quick scan item listing -->
+        <div>
+          <h5 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase;">
+            Quick Tap Stock (Simulated Scans)
+          </h5>
+          <div class="scanner-quick-list" id="quick-scan-list">
+            <!-- Loaded dynamically from products list -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: Invoices Mode -->
+    <div class="mobile-panel" id="panel-invoices">
+      <div class="invoices-card">
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <span>Recent Invoice Logs</span>
+          <span class="invoice-count-badge" id="mobile-invoice-count">0</span>
+        </h4>
+        
+        <!-- Dynamic Invoices List -->
+        <div class="mobile-invoices-list" id="mobile-invoices-list">
+          <div style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+            <i class="fa-solid fa-receipt" style="font-size: 2.5rem; opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
+            No invoices received yet...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 4: Add Product Mode -->
+    <div class="mobile-panel" id="panel-addproduct">
+      <div class="addproduct-card">
+        <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">Add New Product</h4>
+        
+        <form id="add-product-form" onsubmit="event.preventDefault(); submitNewProduct();" style="display: flex; flex-direction: column; gap: 0.8rem;">
+          
+          <div class="form-group">
+            <label>Product Name / اسم المنتج</label>
+            <input type="text" id="add-name" required placeholder="e.g. Silicone Case iPhone 15">
+          </div>
+          
+          <div class="form-group">
+            <label>Barcode / باركود المنتج</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="add-barcode" required placeholder="Scan or type barcode...">
+              <button type="button" onclick="startFormBarcodeScan()" class="form-scan-btn" title="Scan Barcode">
+                <i class="fa-solid fa-barcode"></i> Scan
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Category / التصنيف</label>
+            <select id="add-category" required>
+              <option value="Protectors">Protectors (سكرينات)</option>
+              <option value="Screens">Screens (شاشات)</option>
+              <option value="Cases">Cases (جرابات)</option>
+              <option value="Cables">Chargers & Cables (شواحن وكابلات)</option>
+              <option value="Accessories">Accessories (اكسسوارات)</option>
+            </select>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+            <div class="form-group">
+              <label>Retail Price / سعر التجزئة</label>
+              <input type="number" step="0.01" id="add-retail" required placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+              <label>Wholesale Price / سعر الجملة</label>
+              <input type="number" step="0.01" id="add-wholesale" required placeholder="0.00">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Stock Qty / الكمية</label>
+            <input type="number" id="add-stock" required placeholder="0" value="50">
+          </div>
+          
+          <div class="form-group">
+            <label>Product Photo / صورة المنتج</label>
+            <div class="photo-capture-container">
+              <!-- Hidden native file capture -->
+              <input type="file" id="product-photo-input" accept="image/*" capture="environment" style="display: none;" onchange="handleProductPhotoSelected(this)">
+              
+              <button type="button" class="photo-capture-btn" id="photo-capture-btn" onclick="document.getElementById('product-photo-input').click()">
+                <i class="fa-solid fa-camera"></i> Capture Photo
+              </button>
+              
+              <!-- Preview container -->
+              <div id="photo-preview-box" class="photo-preview-box" style="display: none;">
+                <img id="photo-preview-img" src="" alt="Captured Image">
+                <button type="button" class="remove-photo-btn" onclick="removeCapturedPhoto()">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-product-btn">
+            <i class="fa-solid fa-plus-circle"></i> Create Product
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Form Barcode Scan Modal Container -->
+  <div id="form-scan-modal" class="form-scan-modal">
+    <div class="form-scan-modal-content">
+      <div class="form-scan-modal-header">
+        <span>Scan Product Barcode</span>
+        <button type="button" onclick="stopFormBarcodeScan()">&times;</button>
+      </div>
+      <div id="form-reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000;"></div>
+      <div class="form-scan-modal-footer">
+        Align barcode inside viewfinder to capture
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Connection Settings Overlay -->
+  <div class="modal-overlay" id="connection-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
+    <div class="receipt-modal" style="width: 90%; max-width: 400px; padding: 1.5rem; text-align: left; background: var(--bg-secondary); border: 1px solid var(--card-border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1rem;">
+      <h3 style="font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; margin: 0;">
+        <span>Connection Setup / إعدادات الاتصال</span>
+        <button onclick="closeConnectionModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">&times;</button>
+      </h3>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">Connection Mode / نوع الاتصال</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+          <button id="btn-mode-local" onclick="selectConnectionMode('local')" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;">
+            <i class="fa-solid fa-wifi" style="margin-right: 4px;"></i> Wi-Fi Local
+          </button>
+          <button id="btn-mode-cloud" onclick="selectConnectionMode('cloud')" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;">
+            <i class="fa-solid fa-cloud" style="margin-right: 4px;"></i> Firebase Cloud
+          </button>
+        </div>
+      </div>
+      
+      <div id="cloud-config-section" style="display: none; flex-direction: column; gap: 0.5rem;">
+        <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">Firebase Project ID / معرف المشروع</label>
+        <input type="text" id="firebase-project-id-input" placeholder="e.g. aeropos-xxxx" style="background: var(--bg-primary); border: 1px solid var(--card-border); color: #fff; padding: 10px; border-radius: 8px; font-size: 0.85rem; outline: none; font-family: monospace;">
+      </div>
+      
+      <button onclick="saveConnectionSettings()" style="background: var(--accent-active); border: none; color: #0b0f19; font-weight: 700; padding: 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: all 0.2s; margin-top: 0.5rem; width: 100%;">
+        <i class="fa-solid fa-circle-check"></i> Save & Connect / حفظ واتصال
+      </button>
+      <button onclick="handleAdminLogout()" style="background: transparent; border: 1px solid var(--error); color: var(--error); font-weight: 700; padding: 10px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: all 0.2s; margin-top: 0.2rem; width: 100%;">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out / تسجيل الخروج
+      </button>
+    </div>
+  </div>
+
+  <!-- Sockets & Core Logic -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/mobile.js"></script>
+</body>
+</html>

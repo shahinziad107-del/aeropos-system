@@ -1,0 +1,37 @@
+name: Build AeroPOS ISO
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build OS Compiler Docker Image
+        run: |
+          docker build -t aeropos-os-builder ./os-builder
+
+      - name: Generate Kiosk ISO Image
+        run: |
+          mkdir -p output
+          docker run --privileged \
+            -v "${{ github.workspace }}/output:/output" \
+            -v "${{ github.workspace }}:/app" \
+            aeropos-os-builder
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeropos-kiosk-iso
+          path: output/aeropos-kiosk.iso
+          if-no-files-found: error
+          retention-days: 5

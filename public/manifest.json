@@ -1,0 +1,21 @@
+{
+  "short_name": "AeroPOS",
+  "name": "AeroPOS Mobile Companion",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/972/972601.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/972/972601.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/mobile",
+  "background_color": "#080b11",
+  "theme_color": "#00d2ff",
+  "display": "standalone",
+  "orientation": "portrait"
+}

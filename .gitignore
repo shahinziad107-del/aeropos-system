@@ -1,0 +1,7 @@
+node_modules/
+dist/
+output/
+.gemini/
+.firebase/
+firebase-debug.log
+firebase-config.json
