@@ -54,9 +54,11 @@ chroot "$CHROOT_DIR" apt-get install -y --no-install-recommends \
   ca-certificates
 
 echo "=== [5/7] Deploying AeroPOS software inside custom OS ==="
-# Create kiosk user with passwordless auto-login
+# Create kiosk user and set default passwords for debugging
 chroot "$CHROOT_DIR" useradd -m -s /bin/bash kiosk
-chroot "$CHROOT_DIR" passwd -d kiosk
+echo "kiosk:kiosk" | chroot "$CHROOT_DIR" chpasswd
+echo "root:root" | chroot "$CHROOT_DIR" chpasswd
+
 chroot "$CHROOT_DIR" usermod -aG netdev kiosk
 
 # Configure systemd autologin on tty1
@@ -75,6 +77,10 @@ rm -rf "$CHROOT_DIR/opt/aeropos/os-builder"
 
 # Install production dependencies inside OS
 chroot "$CHROOT_DIR" bash -c "cd /opt/aeropos && npm install --production"
+
+# Set kiosk ownership for application files to allow writing local databases
+chroot "$CHROOT_DIR" chown -R kiosk:kiosk /opt/aeropos
+
 
 # Install systemd service for node backend
 cp /kiosk-setup/aeropos.service "$CHROOT_DIR/etc/systemd/system/"
