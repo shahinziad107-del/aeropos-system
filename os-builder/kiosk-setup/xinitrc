@@ -14,7 +14,7 @@ while ! nc -z localhost 3000; do
 done
 
 # Launch Chromium browser in Kiosk mode
-chromium-browser \
+chromium \
   --kiosk \
   --no-first-run \
   --no-sandbox \
